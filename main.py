@@ -10,11 +10,12 @@ templates = Jinja2Templates(directory="templates")
 async def home(request: Request):
     data = "hello my project"
     return templates.TemplateResponse("index.html", {"request": request, "data" : data})
+
 # localhost:8000/dashboard
 @app.get("/dashboard")
 async def dashboard(request: Request):
-    data = "hello my project"
-    return templates.TemplateResponse("dashboard.html", {"request": request, "data" : data})
+    data1 = "This is Sales Data"
+    return templates.TemplateResponse("dashboard.html", {"request": request, "data1" : data1})
 
 
 if __name__ == "__main__":
