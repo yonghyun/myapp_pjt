@@ -1,63 +1,171 @@
 {% extends 'base.html' %}
 
-
-<!-- 상속받은 페이지인 자식페이지의 콘텐츠 부분-->
-
 {% block contents %}
+<h1 style="font-weight: bold;">{{ data1 }}</h1>
 
-<style>
-  .chart_container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  #myChart {
-    width: 100% !important;
-    height: 100% !important;
-  }
-  .form-label {
-        font-weight: bold;
-    }
-    .form-control {
-        padding: 0.5rem;
-        font-size: 1rem;
-    }
-    .btn {
-        padding: 0.75rem;
-        font-size: 1rem;
-    }
-</style>
+<div class="container">
+  <div class="row">
+    <!-- 왼쪽 데이터 입력 폼 (4칸) -->
+    <div class="col-md-4">
+      <form method="post" action="/save_data" class="row g-3">
+        <div class="col-md-12">
+          <label for="inputMonth" class="form-label">Month</label>
+          <input type="number" class="form-control" id="inputMonth" name="month" min="1" max="12" required>
+        </div>
+        <div class="col-md-12">
+          <label for="inputSales" class="form-label">Sales Amount ($)</label>
+          <input type="number" class="form-control" id="inputSales" name="sales_amount" required>
+        </div>
+        <div class="col-md-12">
+          <button type="submit" class="btn btn-primary">Save Data</button>
+        </div>
+      </form>
+    </div>
 
-  <h1>{{data1}}</h1>
-  <div>
-    <canvas id="myChart"></canvas>
+     <!-- 차트 배치 -->
+     <div class="col-md-8">
+      <div class="row">
+        <!-- 파이 차트 -->
+        <div class="col-md-4 d-flex align-items-center justify-content-center"> <!-- 이 부분이 파이 차트 공간 -->
+          <div class="chart_container" style="width: 300px; height: 300px;">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="col-md-8">
+          <div class="chart_container">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Chart -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="chart_container">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <script>
-    const ctx = document.getElementById('myChart');
-  
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul','Aug','Sep','Oct','Nov','Dec'],
-        datasets: [{
-          label: '# $1000',
-          data: [12, 19, 3, 5, 2, 3, 16, 18, 24, 7, 11, 22],
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',  // 모든 막대의 배경색
-        borderColor: 'rgba(75, 192, 192, 1)',  
-          borderWidth: 1
-        }]
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // Jinja2 템플릿 데이터를 변수에 할당
+  const month = JSON.parse('{{ month | tojson | safe }}');
+  const sales_amount = JSON.parse('{{ sales_amount | tojson | safe }}');
+  const growth_rate = JSON.parse('{{ growth_rate | tojson | safe }}');
+
+  // 첫 번째 캔버스에 Bar 차트를 그리기
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: month,
+      datasets: [{
+        label: 'Sales Amount ($)',
+        data: sales_amount,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Sales Amount'
           }
         }
       }
-    });
-  </script>
+    }
+  });
+
+  // 두 번째 캔버스에 Line 차트를 그리기
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: month,
+      datasets: [{
+        label: 'Sales Growth Rate (%)',
+        data: growth_rate,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Sales Growth Rate (%)'
+          }
+        }
+      }
+    }
+  });
+
+    // 세 번째 캔버스에 Pie 차트를 그리기 (월별 매출 비율)
+    const totalSales = sales_amount.reduce((acc, val) => acc + val, 0);
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: month,
+      datasets: [{
+        data: sales_amount.map(amount => (amount / totalSales) * 100), // 매출 비율 계산
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(0, 128, 128, 0.2)',
+          'rgba(128, 0, 128, 0.2)',
+          'rgba(255, 69, 0, 0.2)',
+          'rgba(0, 255, 127, 0.2)',
+          'rgba(70, 130, 180, 0.2)',
+          'rgba(220, 20, 60, 0.2)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(0, 128, 128, 1)',
+          'rgba(128, 0, 128, 1)',
+          'rgba(255, 69, 0, 1)',
+          'rgba(0, 255, 127, 1)',
+          'rgba(70, 130, 180, 1)',
+          'rgba(220, 20, 60, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(tooltipItem) {
+              return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+            }
+          }
+        }
+      }
+    }
+  });
   
+</script>
+
 {% endblock contents %}
