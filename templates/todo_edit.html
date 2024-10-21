@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block head %}
+    <title>ToDo App</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+{% endblock head %}
+
+{% block content %}
+<main>
+    <h4>나를 성장시키는 메모</h4>
+    <div class="todo-content">
+        <!-- 여기에서 todo 리스트를 추가로 표시할 수 있음 -->
+    </div>
+
+    <!-- 이미지 추가 -->
+    <div class="image-container">
+        <img src="{{ url_for('static', path='image/1.jpg') }}" alt="성장 이미지" class="small-image">
+    </div>
+
+    <!-- Edit form -->
+    <form action="/edit/{{ todo.id }}" method="post">
+        <textarea name="task" rows="5">{{ todo.task }}</textarea>
+        <label for="completed">Done?</label>
+        <input type="checkbox" name="completed" 
+        {% if todo.completed %}
+        checked
+        {% endif %}>
+        <button type="submit">Save</button>
+    </form>
+</main>
+{% endblock content %}
+
